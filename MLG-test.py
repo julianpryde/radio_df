@@ -2,6 +2,45 @@ import tkinter as tk #for creating GUIs
 from PIL import Image, ImageTk #for creating and manipulating images
 import numpy as np #for all math operations
 
+
+def pixel_position_transform():
+    pass
+
+#  Use this to create a transform so we don't have to do all this math on every
+#  iteration, just place a pixel in a spot in pic automatically.
+#  Then, we can use Cython to speed it up even further.
+def calculate_pixel_positions(pic, data):
+    # loop through beams
+    for ith_beam in range(num_beams):
+        # calculate the proper rotation of the disc
+        this_beam_center = array_main_axis + int(ith_beam * (360 / num_beams))  # in compass degrees
+        this_beam_center = 90 - this_beam_center  # in trig degrees
+        this_beam_center = this_beam_center * np.pi / 180  # in radians
+
+        # loop through time
+        for jth_layer in range(int(disc_diameter / 2 * disc_aspect)):
+            # calculate geometry for this arc/beam
+            pixels_in_this_arc = int((disc_diameter / 2 - jth_layer) * 2 * np.pi / num_beams)
+            data_center = int(np.size(data[jth_layer, :, ith_beam]) / 2)
+            this_arc = data[jth_layer, data_center - int(pixels_in_this_arc / 2):data_center + int(pixels_in_this_arc / 2),
+                       ith_beam]
+            rads_per_step = 2 * np.pi / num_beams / pixels_in_this_arc
+            start_rads = this_beam_center - 2 * np.pi / num_beams / 2
+
+            this_pixel = [0, 0]
+
+            # loop through frequencies in wedge
+            for kth_pixel in range(this_arc.size):
+                # calculate the location of this pixel. Doing a cylindrical to cartesian coordinates calc
+                this_pixel[0] = int(disc_diameter / 2) - int((disc_diameter / 2 - jth_layer) * np.sin(start_rads + rads_per_step * kth_pixel))
+                this_pixel[1] = int(disc_diameter / 2) - int((disc_diameter / 2 - jth_layer) * np.cos(start_rads + rads_per_step * kth_pixel))
+
+                # place the pixel in the picture array
+                pic[this_pixel[0] - 1, this_pixel[1] - 1] = this_arc[kth_pixel]
+
+    return pic
+
+
 if __name__ == "__main__":
     #Array Parameters
     array_main_axis = 0 #direction of element 1 WRT the center
@@ -46,32 +85,7 @@ if __name__ == "__main__":
         #create new image from data
         pic = np.zeros((disc_diameter,disc_diameter))
 
-        #loop through beams
-        for a in range(num_beams):
-            #calculate the proper rotation of the disc
-            this_beam_center = array_main_axis + int(a*(360/num_beams)) #in compass degrees
-            this_beam_center = 90 - this_beam_center #in trig degrees
-            this_beam_center = this_beam_center * np.pi / 180 #in radians
-
-            #loop through time
-            for b in range(int(disc_diameter/2*disc_aspect)):
-                #calculate geometry for this arc/beam
-                pixels_in_this_arc = int((disc_diameter/2 - b)*2*np.pi/num_beams)
-                data_center = int(np.size(data[b,:,a])/2)
-                this_arc = data[b,data_center-int(pixels_in_this_arc/2):data_center+int(pixels_in_this_arc/2),a]
-                rads_per_step = 2*np.pi/num_beams/pixels_in_this_arc
-                start_rads = this_beam_center - 2*np.pi/num_beams/2
-
-                this = [0,0]
-                #loop through frequencies in wedge
-                for c in range(this_arc.size):
-                    #calculate the location of this pixel. Doing a cylindrical to cartesian coordinates calc
-                    this[0] = int(disc_diameter/2) - int((disc_diameter/2 - b) * np.sin(start_rads + rads_per_step * c))
-                    this[1] = int(disc_diameter/2) - int((disc_diameter/2 - b) * np.cos(start_rads + rads_per_step * c))
-
-                    #place the pixel in the picture array
-                    pic[this[0]-1,this[1]-1] = this_arc[c]
-
+        pic = calculate_pixel_positions(pic, data)
 
         #create the image from the data and add to the window
         pic = pic.flatten() #convert 2-D pic array to 1-D as required by pillow
