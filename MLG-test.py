@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
         #log new data
         new_randoms = np.random.randint(0,2**8,size=data.shape[2])
-        new_data = np.array([np.full(pixels_per_beam, point) for point in new_randoms])
+        new_data = np.array([np.full(pixels_per_beam + 1, point) for point in new_randoms]).transpose()
         data[0,:,:] = new_data[:,:]
 
         #create new image from data
