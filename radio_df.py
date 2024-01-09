@@ -38,7 +38,7 @@ def music(received_signal, num_signals, num_antennae):
     return p_spectrum
 
 if __name__ == "__main__":
-    sample
+    sample_data = np.zeros(10)
 
     # build received signal matrix
     
