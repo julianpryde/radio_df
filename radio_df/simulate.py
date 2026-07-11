@@ -4,7 +4,53 @@ Given an array geometry, source bearings, and an SNR, produce the
 multi-channel received-signal matrix that the receiver would deliver. This is
 the test oracle for the MUSIC implementation, signal detection, and display.
 """
+from dataclasses import dataclass
+
 import numpy as np
+
+
+@dataclass(frozen=True)
+class SimulatedSource:
+    """A transmitter for wideband IQ simulation.
+
+    ``offset_hz`` is the carrier's offset from the receiver center frequency;
+    ``snr_db`` is the tone's power relative to the full-band noise power.
+    """
+
+    bearing_deg: float
+    offset_hz: float
+    snr_db: float = 10.0
+
+
+def simulate_iq(
+    array,
+    sources,
+    center_freq_hz,
+    sample_rate_hz,
+    num_samples,
+    rng=None,
+):
+    """Wideband multi-channel IQ with tones at several frequencies/bearings.
+
+    Each ``SimulatedSource`` contributes a complex tone at its frequency
+    offset, phased across the array according to its bearing at the actual RF
+    frequency. Unit-power full-band noise is added per element. Returns an
+    (array.num_elements, num_samples) complex array.
+    """
+    rng = np.random.default_rng(rng)
+    times = np.arange(num_samples) / sample_rate_hz
+    iq = _complex_gaussian(rng, (array.num_elements, num_samples))
+    for source in sources:
+        steering = array.steering_vector(
+            source.bearing_deg, center_freq_hz + source.offset_hz
+        )
+        amplitude = 10.0 ** (source.snr_db / 20.0)
+        phase = rng.uniform(0.0, 2.0 * np.pi)
+        tone = amplitude * np.exp(
+            1j * (2.0 * np.pi * source.offset_hz * times + phase)
+        )
+        iq += steering[:, np.newaxis] * tone[np.newaxis, :]
+    return iq
 
 
 def simulate_snapshots(
