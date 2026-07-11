@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "radio_df"
+version = "0.1.0"
+description = "Direction finding of HF radio signals with a small antenna array"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+]
+
+[project.optional-dependencies]
+display = [
+    "pyqtgraph",
+    "PyQt5",
+]
+dev = [
+    "pytest",
+]
+
+[tool.setuptools]
+packages = ["radio_df"]
