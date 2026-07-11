@@ -1,0 +1,8 @@
+numpy
+
+[dev]
+pytest
+
+[display]
+pyqtgraph
+PyQt5
