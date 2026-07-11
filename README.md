@@ -7,13 +7,31 @@ output is a dashboard with a time-bearing display of incoming radio signals. mos
 
 See [PLAN.md](PLAN.md) for the project roadmap and recommended hardware.
 
-## Usage
+## Installation & Usage
+
+### Linux / macOS (bash, zsh)
 
 ```sh
-pip install -e .[display,dev]   # numpy core; pyqtgraph for the dashboard
-python -m pytest                # run the test suite (no hardware needed)
-python -m radio_df.display     # dashboard demo with simulated signals
-python -m radio_df.display --polar   # same, as a polar disc
+# Install with display and dev extras (note the single quotes to prevent shell glob expansion)
+pip install -e '.[display,dev]'
+
+# Run tests (no hardware needed)
+python -m pytest
+
+# Run the dashboard demo
+python -m radio_df.display         # time-bearing waterfall
+python -m radio_df.display --polar # rotating azimuth disc
+```
+
+### Windows (PowerShell or cmd)
+
+```cmd
+REM PowerShell or cmd — square brackets don't need escaping
+pip install -e ".[display,dev]"
+
+python -m pytest
+python -m radio_df.display
+python -m radio_df.display --polar
 ```
 
 The pipeline lives in the `radio_df` package: `simulate` (synthetic IQ),
