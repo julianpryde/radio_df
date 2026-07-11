@@ -81,6 +81,64 @@ class PolarDiscMap:
         return disc
 
 
+def _add_bearing_tickmarks(plot, image_item):
+    """Add compass bearing labels and tickmarks around the polar disc perimeter."""
+    try:
+        import pyqtgraph as pg
+    except ImportError:
+        return
+
+    # Bearing labels at cardinal and intercardinal directions
+    bearings = [
+        (0, "N"),
+        (45, "NE"),
+        (90, "E"),
+        (135, "SE"),
+        (180, "S"),
+        (225, "SW"),
+        (270, "W"),
+        (315, "NW"),
+    ]
+
+    # Get the image dimensions from the image item
+    img_bounds = image_item.boundingRect()
+    center_x = img_bounds.center().x()
+    center_y = img_bounds.center().y()
+    radius = img_bounds.width() / 2.0
+
+    # Add tickmarks and labels around the circle
+    for bearing_deg, label in bearings:
+        # Convert bearing to radians (bearing 0° is up, so subtract from 90°)
+        angle_rad = np.radians(90 - bearing_deg)
+
+        # Position for tick mark (on the circle perimeter)
+        tick_radius = radius * 1.05
+        tick_x = center_x + tick_radius * np.cos(angle_rad)
+        tick_y = center_y + tick_radius * np.sin(angle_rad)
+
+        # Position for label (slightly further out)
+        label_radius = radius * 1.15
+        label_x = center_x + label_radius * np.cos(angle_rad)
+        label_y = center_y + label_radius * np.sin(angle_rad)
+
+        # Add text label
+        text = pg.TextItem(label, anchor=(0.5, 0.5), color=(200, 200, 200))
+        text.setPos(label_x, label_y)
+        plot.addItem(text)
+
+        # Add tick mark (small line)
+        tick_inner = radius * 0.98
+        tick_inner_x = center_x + tick_inner * np.cos(angle_rad)
+        tick_inner_y = center_y + tick_inner * np.sin(angle_rad)
+
+        line = pg.LineItem(
+            pos0=(tick_inner_x, tick_inner_y),
+            pos1=(tick_x, tick_y),
+            pen=pg.mkPen(color=(200, 200, 200), width=1),
+        )
+        plot.addItem(line)
+
+
 def run_dashboard(signal_source, num_rows=200, interval_ms=200, polar=False):
     """Show a live dashboard fed by an iterator of signal lists.
 
@@ -109,6 +167,7 @@ def run_dashboard(signal_source, num_rows=200, interval_ms=200, polar=False):
         plot.hideAxis("bottom")
         plot.hideAxis("left")
         plot.setAspectLocked(True)
+        _add_bearing_tickmarks(plot, image_item)
     else:
         plot.setLabel("bottom", "bearing", units="°")
         plot.setLabel("left", "age (newest at top)")
