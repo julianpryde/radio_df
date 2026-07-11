@@ -131,9 +131,9 @@ def _add_bearing_tickmarks(plot, image_item):
         tick_inner_x = center_x + tick_inner * np.cos(angle_rad)
         tick_inner_y = center_y + tick_inner * np.sin(angle_rad)
 
-        line = pg.LineItem(
-            pos0=(tick_inner_x, tick_inner_y),
-            pos1=(tick_x, tick_y),
+        line = pg.PlotCurveItem(
+            x=[tick_inner_x, tick_x],
+            y=[tick_inner_y, tick_y],
             pen=pg.mkPen(color=(200, 200, 200), width=1),
         )
         plot.addItem(line)
